@@ -1,0 +1,14 @@
+{
+  "dependencies": [
+    "boost-foreach",
+    "boost-program-options",
+    "boost-date-time",
+    "boost-property-tree",
+    "glew",
+    "glfw3",
+    "glm",
+    "libpng",
+    "nlohmann-json",
+    "zlib"
+  ]
+}
