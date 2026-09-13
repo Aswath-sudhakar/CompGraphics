@@ -19,7 +19,8 @@ include(Catch)
 # 
 set(UTESTS 
   utest_Success
-  utest_Failure)
+  utest_Failure
+  vec3_test)
 
 # 
 # For each of the executables named in ${UTESTS}, compile them into a
