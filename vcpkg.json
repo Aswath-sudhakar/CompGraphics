@@ -9,6 +9,7 @@
     "glm",
     "libpng",
     "nlohmann-json",
-    "zlib"
+    "zlib",
+    "doctest"
   ]
 }
