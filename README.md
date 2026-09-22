@@ -1,1 +1,1 @@
-In order to run this project and test the files, first run cmake --build build VCPkg, then run .\buildVCPkg\utests\Debug\vec3_test.exe to run the test file in the terminal
+In order to run this project and test the files, first run cmake --build build VCPkg, then run .\buildVCPkg\utests\Debug\vec3_test.exe to run the test file in the terminal. For the camera and the ray test, run the previous command but with the other exe names 
