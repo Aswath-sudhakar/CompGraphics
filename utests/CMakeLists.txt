@@ -20,7 +20,10 @@ include(Catch)
 set(UTESTS 
   utest_Success
   utest_Failure
-  vec3_test)
+  vec3_test
+  ray_test
+  camera_test 
+  main)
 
 # 
 # For each of the executables named in ${UTESTS}, compile them into a
@@ -35,6 +38,6 @@ foreach(uexec ${UTESTS})
   )
 
   # add_test(NAME ${uexec} COMMAND $<TARGET_FILE:${uexec}>)
-  catch_discover_tests(${uexec})
+  catch_discover_tests(${uexec} DISCOVERY_MODE PRE_TEST)
 endforeach(uexec)
 
