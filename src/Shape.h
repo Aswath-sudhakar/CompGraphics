@@ -5,7 +5,7 @@
 #include "Vec3.h"
 #include "Ray.h"
 
-struct HitReord
+struct HitRecord
 {
   point3 p;
   vec3 normal;
@@ -14,8 +14,9 @@ struct HitReord
 
 class shape
 {
-
-  virtual bool hit(const ray &r, double t_min, double t_max, HitReord) = 0;
+public:
+  virtual ~shape() = default;
+  virtual bool hit(const ray &r, double t_min, double t_max, HitRecord &rec) const = 0;
 };
 
 #endif
