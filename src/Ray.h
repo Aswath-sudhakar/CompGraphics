@@ -1,5 +1,5 @@
 #ifndef RAY_H
-#define Ray_H
+#define RAY_H
 
 #include "Vec3.h"
 

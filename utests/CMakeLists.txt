@@ -23,7 +23,9 @@ set(UTESTS
   vec3_test
   ray_test
   camera_test 
-  main)
+  main
+  sphere_test
+  )
 
 # 
 # For each of the executables named in ${UTESTS}, compile them into a

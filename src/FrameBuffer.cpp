@@ -1,15 +1,32 @@
 #include "vec3.h"
 #include "frame_buffer.h"
 #include "png++/png.hpp"
-
+#include <limits>
 #include <iostream>
-
+#include "shape_list.h"
 
 Framebuffer::Framebuffer(int w, int h)
 {
   width = w;
   height = h;
   fbStorage.resize(width * height);
+}
+
+void Framebuffer::shapeShader(const perspective_camera &cam, const shape &s, const vec3 &bgColor)
+{
+  for (int y = 0; y < height; ++y) {
+    double v = 1.0 - (static_cast<double>(y) + 0.5) / height;// row 0 is the top of the image
+
+    for (int x = 0; x < width; ++x) {
+      double u = (static_cast<double>(x) + 0.5) / width;
+
+      ray r = cam.get_ray(u, v);
+      HitRecord rec;
+
+      bool hit = s.hit(r, 0.001, std::numeric_limits<double>::infinity(), rec);
+      fbStorage[y * width + x] = hit ? rec.color : bgColor;
+    }
+  }
 }
 
 void Framebuffer::rayDirectionShader(const perspective_camera &cam)
