@@ -9,8 +9,8 @@
 class sphere : public shape
 {
 public:
-  sphere(const point3 &c, double r, const vec3 &col)
-    : shape(col), center(c), radius(r) {}
+  sphere(const point3 &c, double r, const vec3 &col, double spec = 0.0, double shine = 32.0)
+    : shape(col, spec, shine), center(c), radius(r) {}
 
   bool hit(const ray &r, double t_min, double t_max, HitRecord &rec) const override
   {
@@ -34,6 +34,8 @@ public:
     rec.p = r.at(root);
     rec.normal = (rec.p - center) / radius;
     rec.color = color;
+    rec.specStrength = specStrength;
+    rec.shininess = shininess;
     return true;
   };
 

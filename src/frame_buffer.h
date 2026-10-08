@@ -21,6 +21,8 @@ public:
   void colorArrayTB(vector<vec3> cArr);
   void rayDirectionShader(const perspective_camera &cam);
   void shapeShader(const perspective_camera &cam, const shape &s, const vec3 &bgColor);
+  void LambShader(const perspective_camera &cam, const shape &s, const point3 &lightPos, const vec3 &bgColor, double ambient = 0.1);
+  void BlinnShader(const perspective_camera &cam, const shape &s, const point3 &lightPos, const vec3 &bgColor, double ambient = 0.1);
 
 private:
   int width, height;

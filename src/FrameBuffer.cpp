@@ -12,6 +12,85 @@ Framebuffer::Framebuffer(int w, int h)
   fbStorage.resize(width * height);
 }
 
+void Framebuffer::LambShader(const perspective_camera &cam, const shape &s, const point3 &lightPos, const vec3 &bgColor, double ambient)
+{
+  const double inf = std::numeric_limits<double>::infinity();
+
+  for (int y = 0; y < height; y++) {
+    double v = 1.0 - (y + 0.5) / height;
+    for (int x = 0; x < width; x++) {
+      double u = (x + 0.5) / width;
+
+      ray r = cam.get_ray(u, v);
+      HitRecord rec;
+
+      if (!s.hit(r, 0.001, inf, rec)) {
+        fbStorage[y * width + x] = bgColor;
+        continue;
+      }
+
+      vec3 toLight = lightPos - rec.p;
+      double diffuse = std::max(0.0, dot(rec.normal, unit_vector(toLight)));
+
+
+      HitRecord blocker;
+      if (s.hit(ray(rec.p, toLight), 0.001, 1.0, blocker)) diffuse = 0.0;
+
+      double brightness = ambient + (1.0 - ambient) * diffuse;
+      fbStorage[y * width + x] = rec.color * brightness;
+    }
+  }
+};
+
+void Framebuffer::BlinnShader(const perspective_camera &cam, const shape &s, const point3 &lightPos, const vec3 &bgColor, double ambient)
+{
+  const double inf = std::numeric_limits<double>::infinity();
+
+  for (int y = 0; y < height; ++y) {
+    double v = 1.0 - (y + 0.5) / height;
+    for (int x = 0; x < width; ++x) {
+      double u = (x + 0.5) / width;
+
+      ray r = cam.get_ray(u, v);
+      HitRecord rec;
+
+      if (!s.hit(r, 0.001, inf, rec)) {
+        fbStorage[y * width + x] = bgColor;
+        continue;
+      }
+
+      vec3 N = unit_vector(rec.normal);
+      vec3 toLight = lightPos - rec.p;
+      vec3 L = unit_vector(toLight);
+      vec3 V = unit_vector(-r.direction());
+      vec3 H = unit_vector(L + V);
+
+      double diffuse = std::max(0.0, dot(N, L));
+      double specular = 0.0;
+      if (diffuse > 0.0)
+        specular = std::pow(std::max(0.0, dot(N, H)), rec.shininess);
+
+
+      HitRecord blocker;
+      if (s.hit(ray(rec.p, toLight), 0.001, 1.0, blocker)) {
+        diffuse = 0.0;
+        specular = 0.0;
+      }
+
+      vec3 white(1.0, 1.0, 1.0);
+      vec3 color = (ambient + (1.0 - ambient) * diffuse) * rec.color
+                   + (rec.specStrength * specular) * white;
+
+
+      color = vec3(std::min(1.0, color.x()),
+        std::min(1.0, color.y()),
+        std::min(1.0, color.z()));
+
+      fbStorage[y * width + x] = color;
+    }
+  }
+}
+
 void Framebuffer::shapeShader(const perspective_camera &cam, const shape &s, const vec3 &bgColor)
 {
   for (int y = 0; y < height; ++y) {
