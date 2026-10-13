@@ -23,6 +23,7 @@ public:
   void shapeShader(const perspective_camera &cam, const shape &s, const vec3 &bgColor);
   void LambShader(const perspective_camera &cam, const shape &s, const point3 &lightPos, const vec3 &bgColor, double ambient = 0.1);
   void BlinnShader(const perspective_camera &cam, const shape &s, const point3 &lightPos, const vec3 &bgColor, double ambient = 0.1);
+  void render(const perspective_camera &cam, const shape &world, const point3 &lightPos, const vec3 &bgColor, int n = 1);
 
 private:
   int width, height;
@@ -30,4 +31,4 @@ private:
   vector<vec3> fbStorage;
 };
 
-#endif//
+#endif

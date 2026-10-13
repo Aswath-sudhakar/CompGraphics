@@ -16,12 +16,12 @@ int main()
 
   shape_list scene;
   scene.add(std::make_shared<sphere>(
-    point3(-0.6, 0.0, -1.5), 0.5, vec3(0.74, 0.0, 0.18)));
+    point3(-0.6, 0.0, -1.5), 0.5, vec3(0.74, 0.0, 0.18), LAMBERT, 0.0, 32.0, 0.2));// left: slightly reflective
   scene.add(std::make_shared<sphere>(
-    point3(0.6, 0.0, -1.5), 0.5, vec3(0.1, 0.4, 0.9), 0.6, 64.0));
+    point3(0.6, 0.0, -1.5), 0.5, vec3(0.1, 0.4, 0.9), BLINN, 0.6, 64.0, 0.8));// right: very reflective
 
-  fb.BlinnShader(cam, scene, point3(-2, 2, 1), vec3(1, 1, 1));
-  fb.exportAsPNG("spheres2.png");
+  fb.render(cam, scene, point3(-2, 2, 1), vec3(0.5, 0.7, 1.0), 4);
+  fb.exportAsPNG("mirror_aa.png");
 
   std::cout << "Done! Wrote spheres.png" << std::endl;
   return 0;
