@@ -6,6 +6,8 @@
 #include "Vec3.h"
 #include "Pcamera.h"
 #include "Shape.h"
+#include "light.h"
+#include "vector"
 using namespace std;
 
 class Framebuffer
@@ -23,7 +25,7 @@ public:
   void shapeShader(const perspective_camera &cam, const shape &s, const vec3 &bgColor);
   void LambShader(const perspective_camera &cam, const shape &s, const point3 &lightPos, const vec3 &bgColor, double ambient = 0.1);
   void BlinnShader(const perspective_camera &cam, const shape &s, const point3 &lightPos, const vec3 &bgColor, double ambient = 0.1);
-  void render(const perspective_camera &cam, const shape &world, const point3 &lightPos, const vec3 &bgColor, int n = 1);
+  void render(const perspective_camera &cam, const shape &world, const std::vector<point_light> &lights, const vec3 &bgColor, int n = 1);
 
 private:
   int width, height;

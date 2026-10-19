@@ -37,6 +37,7 @@ public:
     rec.specStrength = specStrength;
     rec.shininess = shininess;
     rec.reflectivity = reflectivity;
+    rec.shading = model;
 
     return true;
   };

@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <cmath>
 #include <random>
+#include "light.h"
 
 Framebuffer::Framebuffer(int w, int h)
 {
@@ -21,43 +22,15 @@ static double randomDouble()
   static std::mt19937 gen(12345);
   static std::uniform_real_distribution<double> dist(0.0, 1.0);
   return dist(gen);
-};
-
-
-static vec3 shadeLambert(const HitRecord &rec, const shape &world, const point3 &lightPos, double ambient)
-{
-  vec3 toLight = lightPos - rec.p;
-  double diffuse = std::max(0.0, dot(rec.normal, unit_vector(toLight)));
-
-  HitRecord blocker;
-  if (world.hit(ray(rec.p, toLight), 0.001, 1.0, blocker)) diffuse = 0.0;
-
-  return (ambient + (1.0 - ambient) * diffuse) * rec.color;
 }
 
-
-static vec3 shadeBlinn(const ray &r, const HitRecord &rec, const shape &world, const point3 &lightPos, double ambient)
+static vec3 randomUnitVector()
 {
-  vec3 N = unit_vector(rec.normal);
-  vec3 toLight = lightPos - rec.p;
-  vec3 L = unit_vector(toLight);
-  vec3 V = unit_vector(-r.direction());
-  vec3 H = unit_vector(L + V);
-
-  double diffuse = std::max(0.0, dot(N, L));
-  double specular = 0.0;
-  if (diffuse > 0.0)
-    specular = std::pow(std::max(0.0, dot(N, H)), rec.shininess);
-
-  HitRecord blocker;
-  if (world.hit(ray(rec.p, toLight), 0.001, 1.0, blocker)) {
-    diffuse = 0.0;
-    specular = 0.0;
+  while (true) {
+    vec3 p(2 * randomDouble() - 1, 2 * randomDouble() - 1, 2 * randomDouble() - 1);
+    double len2 = p.length_squared();
+    if (len2 > 1e-12 && len2 <= 1.0) return p / std::sqrt(len2);
   }
-
-  vec3 c = (ambient + (1.0 - ambient) * diffuse) * rec.color
-           + (rec.specStrength * specular) * vec3(1, 1, 1);
-  return vec3(std::min(1.0, c.x()), std::min(1.0, c.y()), std::min(1.0, c.z()));
 }
 
 static vec3 reflect(const vec3 &v, const vec3 &n)
@@ -65,7 +38,51 @@ static vec3 reflect(const vec3 &v, const vec3 &n)
   return v - 2.0 * dot(v, n) * n;
 }
 
-static vec3 rayColor(const ray &r, const shape &world, const point3 &lightPos, const vec3 &bgColor, int depth, double ambient = 0.1)
+static vec3 clamp01(const vec3 &c)
+{
+  return vec3(std::min(1.0, c.x()), std::min(1.0, c.y()), std::min(1.0, c.z()));
+}
+
+
+static bool inShadow(const shape &world, const point3 &p, const vec3 &toLight)
+{
+  HitRecord blocker;
+  return world.hit(ray(p, toLight), 0.001, 1.0, blocker);
+}
+
+static vec3 shadeLambert(const HitRecord &rec, const shape &world, const std::vector<point_light> &lights, double ambient)
+{
+  vec3 sum(ambient, ambient, ambient);
+  for (const auto &L : lights) {
+    vec3 toLight = L.pos - rec.p;
+    if (inShadow(world, rec.p, toLight)) continue;
+    sum += std::max(0.0, dot(rec.normal, unit_vector(toLight))) * L.intensity;
+  }
+  return clamp01(rec.color * sum);
+}
+
+static vec3 shadeBlinn(const ray &r, const HitRecord &rec, const shape &world, const std::vector<point_light> &lights, double ambient)
+{
+  vec3 V = unit_vector(-r.direction());
+  vec3 diff(ambient, ambient, ambient);
+  vec3 spec(0, 0, 0);
+
+  for (const auto &L : lights) {
+    vec3 toLight = L.pos - rec.p;
+    if (inShadow(world, rec.p, toLight)) continue;
+
+    vec3 Ld = unit_vector(toLight);
+    double nl = dot(rec.normal, Ld);
+    if (nl <= 0.0) continue;
+
+    diff += nl * L.intensity;
+    vec3 H = unit_vector(Ld + V);
+    spec += std::pow(std::max(0.0, dot(rec.normal, H)), rec.shininess) * L.intensity;
+  }
+  return clamp01(rec.color * diff + rec.specStrength * spec);
+}
+
+static vec3 rayColor(const ray &r, const shape &world, const std::vector<point_light> &lights, const vec3 &bgColor, int depth)
 {
   if (depth <= 0) return vec3(0, 0, 0);
 
@@ -73,89 +90,54 @@ static vec3 rayColor(const ray &r, const shape &world, const point3 &lightPos, c
   if (!world.hit(r, 0.001, std::numeric_limits<double>::infinity(), rec))
     return bgColor;
 
+  rec.normal = unit_vector(rec.normal);
+  if (dot(r.direction(), rec.normal) > 0) rec.normal = -rec.normal;
 
-  vec3 local = (rec.shading == BLINN)
-                 ? shadeBlinn(r, rec, world, lightPos, ambient)
-                 : shadeLambert(rec, world, lightPos, ambient);
+  const double ambient = 0.0;
 
-  if (rec.reflectivity <= 0.0) return local;
+  switch (rec.shading) {
+  case BLINN:
+    return shadeBlinn(r, rec, world, lights, ambient);
 
-  vec3 n = unit_vector(rec.normal);
-  if (dot(r.direction(), n) > 0) n = -n;
+  case MIRROR: {
+    ray refl(rec.p, reflect(unit_vector(r.direction()), rec.normal));
+    return rec.color * rayColor(refl, world, lights, bgColor, depth - 1);
+  }
 
-  ray reflected(rec.p, reflect(unit_vector(r.direction()), n));
-  vec3 mirrorColor = rayColor(reflected, world, lightPos, bgColor, depth - 1, ambient);
+  case NORMAL:
+    return 0.5 * (rec.normal + vec3(1, 1, 1));
 
+  case DIFFUSE: {
+    vec3 dir = rec.normal + randomUnitVector();
+    if (dir.length_squared() < 1e-12) dir = rec.normal;
+    return rec.color * rayColor(ray(rec.p, dir), world, lights, bgColor, depth - 1);
+  }
 
-  return (1.0 - rec.reflectivity) * local + rec.reflectivity * mirrorColor;
+  default:
+    return shadeLambert(rec, world, lights, ambient);
+  }
 }
 
-void Framebuffer::render(const perspective_camera &cam, const shape &world, const point3 &lightPos, const vec3 &bgColor, int n)
+void Framebuffer::render(const perspective_camera &cam, const shape &world, const std::vector<point_light> &lights, const vec3 &bgColor, int n)
 {
+  const int maxDepth = 5;
 
-  for (int y = 0; y < height; y++) {
-    for (int x = 0; x < width; x++) {
+  for (int y = 0; y < height; ++y) {
+    for (int x = 0; x < width; ++x) {
       vec3 total(0, 0, 0);
 
       for (int j = 0; j < n; ++j) {
         for (int i = 0; i < n; ++i) {
-
           double u = (x + (i + randomDouble()) / n) / width;
           double v = 1.0 - (y + (j + randomDouble()) / n) / height;
-
-          total += rayColor(cam.get_ray(u, v), world, lightPos, bgColor, 5);
+          total += rayColor(cam.get_ray(u, v), world, lights, bgColor, maxDepth);
         }
       }
       fbStorage[y * width + x] = total / (n * n);
     }
   }
-};
-
-void Framebuffer::LambShader(const perspective_camera &cam, const shape &s, const point3 &lightPos, const vec3 &bgColor, double ambient)
-{
-  const double inf = std::numeric_limits<double>::infinity();
-
-  for (int y = 0; y < height; ++y) {
-    double v = 1.0 - (y + 0.5) / height;
-    for (int x = 0; x < width; ++x) {
-      double u = (x + 0.5) / width;
-
-      ray r = cam.get_ray(u, v);
-      HitRecord rec;
-
-      if (!s.hit(r, 0.001, inf, rec)) {
-        fbStorage[y * width + x] = bgColor;
-        continue;
-      }
-      if (rec.shading != LAMBERT) continue;
-
-      fbStorage[y * width + x] = shadeLambert(rec, s, lightPos, ambient);
-    }
-  }
 }
 
-void Framebuffer::BlinnShader(const perspective_camera &cam, const shape &s, const point3 &lightPos, const vec3 &bgColor, double ambient)
-{
-  const double inf = std::numeric_limits<double>::infinity();
-
-  for (int y = 0; y < height; ++y) {
-    double v = 1.0 - (y + 0.5) / height;
-    for (int x = 0; x < width; ++x) {
-      double u = (x + 0.5) / width;
-
-      ray r = cam.get_ray(u, v);
-      HitRecord rec;
-
-      if (!s.hit(r, 0.001, inf, rec)) {
-        fbStorage[y * width + x] = bgColor;
-        continue;
-      }
-      if (rec.shading != BLINN) continue;
-
-      fbStorage[y * width + x] = shadeBlinn(r, rec, s, lightPos, ambient);
-    }
-  }
-}
 
 void Framebuffer::shapeShader(const perspective_camera &cam, const shape &s, const vec3 &bgColor)
 {

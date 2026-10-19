@@ -7,9 +7,13 @@
 #include "Vec3.h"
 #include "Ray.h"
 
-enum Shading { LAMBERT,
+enum Shading {
+  LAMBERT,
   BLINN,
-  MIRROR };
+  MIRROR,
+  NORMAL,
+  DIFFUSE
+};
 
 struct HitRecord
 {
