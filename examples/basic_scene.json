@@ -1,0 +1,106 @@
+{
+    "scene": {
+        "sceneParameters": {
+            "bgColor": [
+                0.08,
+                0.1,
+                0.14
+            ]
+        },
+        "camera": [
+            {
+                "type": "perspective",
+                "position": [
+                    0,
+                    0.7,
+                    4
+                ],
+                "lookatPoint": [
+                    0,
+                    0,
+                    0
+                ],
+                "focalLength": 1.0,
+                "imagePlaneWidth": 2.0
+            }
+        ],
+        "light": [
+            {
+                "type": "point",
+                "position": [
+                    -2,
+                    3,
+                    3
+                ],
+                "intensity": [
+                    0.9,
+                    0.9,
+                    0.9
+                ]
+            }
+        ],
+        "shader": [
+            {
+                "name": "red",
+                "type": "BlinnPhong",
+                "diffuse": [
+                    0.75,
+                    0.12,
+                    0.1
+                ],
+                "specular": [
+                    0.35,
+                    0.35,
+                    0.35
+                ],
+                "phongExp": 36
+            },
+            {
+                "name": "ground",
+                "type": "Lambertian",
+                "diffuse": [
+                    0.55,
+                    0.58,
+                    0.62
+                ]
+            }
+        ],
+        "shape": [
+            {
+                "type": "sphere",
+                "center": [
+                    0,
+                    0,
+                    0
+                ],
+                "radius": 0.8,
+                "shader": {
+                    "ref": "red"
+                }
+            },
+            {
+                "type": "box",
+                "minPt": [
+                    -2,
+                    -1.15,
+                    -2
+                ],
+                "maxPt": [
+                    2,
+                    -0.95,
+                    2
+                ],
+                "shader": {
+                    "ref": "ground"
+                }
+            },
+            {
+                "type": "mesh",
+                "file": "simple_mesh.meshdata",
+                "shader": {
+                    "ref": "ground"
+                }
+            }
+        ]
+    }
+}

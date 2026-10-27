@@ -22,4 +22,11 @@ target_link_libraries(test_readPNGFile ${Boost_PROGRAM_OPTIONS_LIBRARIES})
 target_link_libraries(test_readPNGFile PNG::PNG)
 target_link_libraries(test_readPNGFile ZLIB::ZLIB)
 
+find_package(nlohmann_json CONFIG REQUIRED)
+add_executable(render_json
+  render_json.cpp
+  ../src/SceneParser_JSON.cpp
+)
+target_link_libraries(render_json PRIVATE cs4212-util nlohmann_json::nlohmann_json)
+
 
