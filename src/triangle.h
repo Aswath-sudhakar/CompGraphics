@@ -4,6 +4,7 @@
 #ifndef TRIANGLE_H
 #define TRIANGLE_H
 
+#include <algorithm>
 #include <cmath>
 #include "Shape.h"
 #include "Vec3.h"
@@ -49,6 +50,18 @@ public:
     rec.shininess = shininess;
     rec.reflectivity = reflectivity;
     return true;
+  }
+
+  aabb bounding_box() const override
+  {
+    const double padding = 1e-8;
+    return aabb(
+      point3(std::min({v0.x(), v1.x(), v2.x()}) - padding,
+             std::min({v0.y(), v1.y(), v2.y()}) - padding,
+             std::min({v0.z(), v1.z(), v2.z()}) - padding),
+      point3(std::max({v0.x(), v1.x(), v2.x()}) + padding,
+             std::max({v0.y(), v1.y(), v2.y()}) + padding,
+             std::max({v0.z(), v1.z(), v2.z()}) + padding));
   }
 
 private:

@@ -6,6 +6,7 @@
 
 #include "Vec3.h"
 #include "Ray.h"
+#include "aabb.h"
 
 enum Shading {
   LAMBERT,
@@ -35,6 +36,7 @@ public:
 
   virtual ~shape() = default;
   virtual bool hit(const ray &r, double t_min, double t_max, HitRecord &rec) const = 0;
+  virtual aabb bounding_box() const = 0;
 
 protected:
   vec3 color;
