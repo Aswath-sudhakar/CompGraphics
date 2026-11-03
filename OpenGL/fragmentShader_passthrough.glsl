@@ -1,0 +1,9 @@
+#version 410 core
+
+in vec3 interpolatedColor;
+out vec4 fragmentColor;
+
+void main()
+{
+  fragmentColor = vec4(interpolatedColor, 1.0f);
+}
