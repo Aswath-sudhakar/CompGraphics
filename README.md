@@ -1,5 +1,6 @@
 In order to run this project and test the files, first run cmake --build build VCPkg, then run .\buildVCPkg\utests\Debug\vec3_test.exe to run the test file in the terminal. For the camera and the ray test, run the previous command but with the other exe names 
 
+for the json loader run .\buildVCPkg\examples\Debug\render_json.exe examples\basic_scene.json render.png 800 600 in the command and then check the output.png in the root file structure of the project
 ## Rendering JSON scenes
 
 Build the `render_json` CMake target, then run it with a scene file:
@@ -37,3 +38,11 @@ Two 1000-object, 1000 x 1000 scenes are included for timing comparisons:
 .\buildVCPkg\examples\Release\render_json.exe examples\bvh_benchmark_cluster_1000.json cluster-linear.png 1000 1000 --no-bvh
 .\buildVCPkg\examples\Release\render_json.exe examples\bvh_benchmark_cluster_1000.json cluster-bvh.png 1000 1000 --bvh
 ```
+
+for the bvh run: 
+.\buildVCPkg\examples\Release\render_json.exe examples\bvh_benchmark_grid_1000.json grid-linear.png 1000 1000 --no-bvh
+.\buildVCPkg\examples\Release\render_json.exe examples\bvh_benchmark_grid_1000.json grid-bvh.png 1000 1000 --bvh
+
+
+.\buildVCPkg\examples\Release\render_json.exe examples\bvh_benchmark_cluster_1000.json cluster-linear.png 1000 1000 --no-bvh
+.\buildVCPkg\examples\Release\render_json.exe examples\bvh_benchmark_cluster_1000.json cluster-bvh.png 1000 1000 --bvh
