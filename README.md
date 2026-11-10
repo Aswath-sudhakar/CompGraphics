@@ -46,3 +46,9 @@ for the bvh run:
 
 .\buildVCPkg\examples\Release\render_json.exe examples\bvh_benchmark_cluster_1000.json cluster-linear.png 1000 1000 --no-bvh
 .\buildVCPkg\examples\Release\render_json.exe examples\bvh_benchmark_cluster_1000.json cluster-bvh.png 1000 1000 --bvh
+
+
+for lab 6 run cmake --build buildVCPkg --target glfwExample  
+>> Push-Location OpenGL
+>> ..\buildVCPkg\OpenGL\Debug\glfwExample.exe
+>> Pop-Location
