@@ -11,6 +11,7 @@
 #include "glm/gtc/type_ptr.hpp"
 
 #include "GLSL.h"
+#include "OpenGLCamera.h"
 
 int CheckGLErrors(const char *s)
 {
@@ -73,9 +74,19 @@ int main(void)
 
   // Each vertex stores position (xyz), followed by its RGB color.
   std::vector<float> host_VertexBuffer{
-    -0.2f, -0.2f, 0.0f,  1.0f, 0.2f, 0.1f, // V0: coral
-     0.8f, -0.8f, 0.0f,  0.1f, 0.5f, 1.0f, // V1: blue
-     0.0f,  0.7f, 0.0f,  0.2f, 1.0f, 0.3f  // V2: green
+    -3.0f, -3.0f, 0.0f, 1.0f, 0.2f, 0.1f,// V0: coral
+    3.0f,
+    -3.0f,
+    0.0f,
+    0.1f,
+    0.5f,
+    1.0f,// V1: blue
+    0.0f,
+    3.0f,
+    0.0f,
+    0.2f,
+    1.0f,
+    0.3f// V2: green
   };
 
   int numBytes = host_VertexBuffer.size() * sizeof(float);
@@ -93,28 +104,27 @@ int main(void)
   glEnableVertexAttribArray(0);
   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), nullptr);
   glEnableVertexAttribArray(1);
-  glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat),
-                        reinterpret_cast<void *>(3 * sizeof(GLfloat)));
+  glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), reinterpret_cast<void *>(3 * sizeof(GLfloat)));
   glBindBuffer(GL_ARRAY_BUFFER, 0);
   glBindVertexArray(0);
 
   sivelab::GLSLObject shader;
-  shader.addShader("vertexShader_passthrough.glsl", sivelab::GLSLObject::VERTEX_SHADER);
+  shader.addShader("vertexShader_WithMatrixTransformation.glsl", sivelab::GLSLObject::VERTEX_SHADER);
   shader.addShader("fragmentShader_passthrough.glsl", sivelab::GLSLObject::FRAGMENT_SHADER);
   shader.createProgram();
-  // Need to set a projection matrix that fits the aspect ratio set
-  // by the window frame.
-  //
-  // The ortho parameters, in order: left, right, bottom, top, zNear, zFar
-  float halfWidth = 15.0 / 2.0;
-  float halfHeight = halfWidth / aspectRatio;
-  glm::mat4 projectionMatrix = glm::ortho(-halfWidth, halfWidth, -halfHeight, halfHeight, -10.0f, 10.0f);
+  GLint modelMatrixLocation = shader.createUniform("modelMatrix");
+  GLint projectionMatrixLocation = shader.createUniform("projMatrix");
+  GLint viewMatrixLocation = shader.createUniform("viewMatrix");
+
+  OpenGLCamera camera(aspectRatio);
+  const float moveRatePerSecond = 3.0f;
 
   GLint major_version;
   glGetIntegerv(GL_MAJOR_VERSION, &major_version);
   std::cout << "GL_MAJOR_VERSION: " << major_version << std::endl;
 
   double timeDiff = 0.0, startFrameTime = 0.0, endFrameTime = 0.0;
+
 
   /* Loop until the user closes the window */
   while (!glfwWindowShouldClose(window)) {
@@ -126,8 +136,16 @@ int main(void)
     // background color)
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+    glm::mat4 modelMatrix = glm::translate(
+      glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -8.0f));
+
     /* Render your objects here */
     shader.activate();
+    glUniformMatrix4fv(modelMatrixLocation, 1, GL_FALSE, glm::value_ptr(modelMatrix));
+    glUniformMatrix4fv(
+      projectionMatrixLocation, 1, GL_FALSE, glm::value_ptr(camera.getProjectionMatrix()));
+    glUniformMatrix4fv(
+      viewMatrixLocation, 1, GL_FALSE, glm::value_ptr(camera.getViewMatrix()));
     glBindVertexArray(m_VAO);
     glDrawArrays(GL_TRIANGLES, 0, 3);
     glBindVertexArray(0);
@@ -138,6 +156,17 @@ int main(void)
 
     /* Poll for and process events */
     glfwPollEvents();
+
+    const float moveDistance = moveRatePerSecond * static_cast<float>(timeDiff);
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
+      camera.moveForward(moveDistance);
+    } else if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
+      camera.moveLeft(moveDistance);
+    } else if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
+      camera.moveBackward(moveDistance);
+    } else if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
+      camera.moveRight(moveDistance);
+    }
 
     if (glfwGetKey(window, GLFW_KEY_T) == GLFW_PRESS) {
       std::cout << "fps: " << 1.0 / timeDiff << std::endl;
