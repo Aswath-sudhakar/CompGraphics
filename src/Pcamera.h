@@ -6,6 +6,12 @@
 class perspective_camera : public camera
 {
 public:
+    // You don't have a default constructor...
+    perspective_camera() 
+    {
+    }
+    
+
   perspective_camera(const point3 &cameraPos, const vec3 &viewDir, double planeWidth, double planeHeight, double focalLength)
   {
     origin = cameraPos;
